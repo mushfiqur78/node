@@ -80,7 +80,7 @@ export default function BlogForm({ initialData, blogId }: BlogFormProps) {
       if (form.slug) fd.append('slug', form.slug);
 
       // Tags as JSON array
-      const tagsArr = form.tags.split(',').map(t => t.trim()).filter(Boolean);
+      const tagsArr = form.tags.split(',').map((t: string) => t.trim()).filter(Boolean);
       fd.append('tags', JSON.stringify(tagsArr));
 
       // SEO

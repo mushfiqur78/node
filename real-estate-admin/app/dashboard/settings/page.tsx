@@ -193,7 +193,7 @@ export default function GeneralSettingPage() {
                 label="New Enquiry → Admin"
                 desc="Admin receives email when a user submits an enquiry on a property"
                 checked={form.notifyEnquiry ?? true}
-                onToggle={v => set('notifyEnquiry', v)}
+                onToggle={(v: boolean) => set('notifyEnquiry', v)}
                 subjectKey="enquirySubject"
                 bodyKey="enquiryBody"
                 form={form}
@@ -206,7 +206,7 @@ export default function GeneralSettingPage() {
                 label="Property Submitted → Admin"
                 desc="Admin receives email when a user submits a new property for review"
                 checked={form.notifyPropertySubmit ?? true}
-                onToggle={v => set('notifyPropertySubmit', v)}
+                onToggle={(v: boolean) => set('notifyPropertySubmit', v)}
                 subjectKey="propertySubmitSubject"
                 bodyKey="propertySubmitBody"
                 form={form}
@@ -219,7 +219,7 @@ export default function GeneralSettingPage() {
                 label="Property Approved → Owner"
                 desc="Owner receives email when their property is approved by admin"
                 checked={form.notifyPropertyApproved ?? true}
-                onToggle={v => set('notifyPropertyApproved', v)}
+                onToggle={(v: boolean) => set('notifyPropertyApproved', v)}
                 subjectKey="propertyApprovedSubject"
                 bodyKey="propertyApprovedBody"
                 form={form}
@@ -232,7 +232,7 @@ export default function GeneralSettingPage() {
                 label="Property Rejected → Owner"
                 desc="Owner receives email when their property is rejected by admin"
                 checked={form.notifyPropertyRejected ?? true}
-                onToggle={v => set('notifyPropertyRejected', v)}
+                onToggle={(v: boolean) => set('notifyPropertyRejected', v)}
                 subjectKey="propertyRejectedSubject"
                 bodyKey="propertyRejectedBody"
                 form={form}
@@ -283,10 +283,41 @@ export default function GeneralSettingPage() {
 }
 
 // ── Reusable notification block ───────────────────────────────────
-function NotifyBlock({ label, desc, checked, onToggle, subjectKey, bodyKey, form, setTpl, color }: any) {
-  const borderColor = { blue: 'border-blue-200', orange: 'border-orange-200', green: 'border-green-200', red: 'border-red-200' }[color] || 'border-gray-200';
-  const accentColor = { blue: 'accent-blue-500', orange: 'accent-orange-500', green: 'accent-green-500', red: 'accent-red-500' }[color] || 'accent-blue-500';
-  const ringColor   = { blue: 'focus:ring-blue-500', orange: 'focus:ring-orange-500', green: 'focus:ring-green-500', red: 'focus:ring-red-500' }[color] || 'focus:ring-blue-500';
+interface NotifyBlockProps {
+  label: string;
+  desc: string;
+  checked: boolean;
+  onToggle: (v: boolean) => void;
+  subjectKey: string;
+  bodyKey: string;
+  form: any;
+  setTpl: (key: string, val: string) => void;
+  color: 'blue' | 'orange' | 'green' | 'red';
+}
+
+function NotifyBlock({ label, desc, checked, onToggle, subjectKey, bodyKey, form, setTpl, color }: NotifyBlockProps) {
+  const colorMap: Record<string, string> = {
+    blue: 'border-blue-200',
+    orange: 'border-orange-200',
+    green: 'border-green-200',
+    red: 'border-red-200'
+  };
+  const accentMap: Record<string, string> = {
+    blue: 'accent-blue-500',
+    orange: 'accent-orange-500',
+    green: 'accent-green-500',
+    red: 'accent-red-500'
+  };
+  const ringMap: Record<string, string> = {
+    blue: 'focus:ring-blue-500',
+    orange: 'focus:ring-orange-500',
+    green: 'focus:ring-green-500',
+    red: 'focus:ring-red-500'
+  };
+  
+  const borderColor = colorMap[color] || 'border-gray-200';
+  const accentColor = accentMap[color] || 'accent-blue-500';
+  const ringColor = ringMap[color] || 'focus:ring-blue-500';
   const inputCls = `w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 ${ringColor}`;
 
   return (
