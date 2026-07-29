@@ -1,0 +1,120 @@
+/**
+ * Main Express App
+ * Entry point for Real Estate Management API
+ * API Version: v1
+ */
+
+require('dotenv').config();
+const express       = require('express');
+const cors          = require('cors');
+const helmet        = require('helmet');
+const morgan        = require('morgan');
+const rateLimit     = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const cookieParser  = require('cookie-parser');
+const connectDB     = require('./config/db');
+const seedAdmin     = require('./config/seed');
+const { protect, authorize } = require('./middleware/auth');
+const errorHandler  = require('./middleware/errorHandler');
+
+const app = express();
+
+// Trust proxy — correct req.ip behind Nginx/load balancer
+app.set('trust proxy', 1);
+
+// Connect Database & Seed
+const startServer = async () => {
+  await connectDB();
+  await seedAdmin();
+  require('./jobs').startJobs();
+};
+startServer();
+
+// ─── Unhandled Rejection & Exception ─────────────────────────────
+process.on('unhandledRejection', (err) => console.error('[UnhandledRejection]', err.message));
+process.on('uncaughtException',  (err) => { console.error('[UncaughtException]', err.message); process.exit(1); });
+
+// ─── Security ─────────────────────────────────────────────────────
+app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: false }));
+app.use(mongoSanitize());
+
+// ─── Logging ──────────────────────────────────────────────────────
+app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
+// ─── Rate Limiting ────────────────────────────────────────────────
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000, max: 200,
+  message: { success: false, message: 'Too many requests, please try again later' },
+  standardHeaders: true, legacyHeaders: false,
+}));
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, max: 10,
+  message: { success: false, message: 'Too many login attempts, please try again later' },
+});
+
+// ─── General Middleware ───────────────────────────────────────────
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*';
+app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+app.use('/uploads', express.static('uploads'));
+
+// ─── API v1 Router ────────────────────────────────────────────────
+const v1 = express.Router();
+
+v1.use('/auth',         authLimiter, require('./routes/authRoutes'));
+v1.use('/admin/auth',   authLimiter, require('./routes/adminAuthRoutes'));
+v1.use('/properties',   require('./routes/propertyRoutes'));
+v1.use('/properties',   require('./routes/advancedSearchRoutes')); // Advanced search
+v1.use('/config',       require('./routes/configRoutes'));
+v1.use('/enquiries',    require('./routes/enquiryRoutes'));
+v1.use('/blogs',        require('./routes/blogRoutes'));
+v1.use('/menus',        require('./routes/menuRoutes'));
+v1.use('/seo',          require('./routes/seoRoutes'));
+v1.use('/settings',     require('./routes/settingsRoutes'));
+v1.use('/wishlist',     require('./routes/wishlistRoutes'));
+v1.use('/profiles',     require('./routes/profileRoutes'));
+v1.use('/testimonials', require('./routes/testimonialRoutes'));
+v1.use('/banners',      require('./routes/bannerRoutes'));
+v1.use('/about',        require('./routes/aboutPageRoutes'));
+v1.use('/contact-page', require('./routes/contactPageRoutes'));
+v1.use('/subscribers',  require('./routes/subscriberRoutes'));
+v1.use('/stats',        require('./routes/statsRoutes')); // Site statistics
+v1.get('/site-config',  require('./controllers/siteConfigController').getSiteConfig);
+v1.get('/sitemap.xml',  require('./controllers/sitemapController').getSitemap);
+// ─── Referral System (public endpoints) ──────────────────────────
+v1.use('/referral',        require('./routes/referralRoutes'));
+v1.use('/coupons',         require('./routes/couponRoutes'));
+v1.use('/referral-leads',  require('./routes/referralLeadRoutes'));
+// ─── Admin (super_admin only) ─────────────────────────────────────
+v1.use('/admin',        protect, authorize('super_admin'), require('./routes/adminRoutes'));
+
+app.use('/api/v1', v1);
+
+// ─── Legacy redirect /api/* → /api/v1/* (backward compatibility) ─
+app.use('/api', (req, res, next) => {
+  // Skip if already /api/v1
+  if (req.path.startsWith('/v1')) return next();
+  req.url = req.url;
+  res.redirect(301, `/api/v1${req.originalUrl.replace('/api', '')}`);
+});
+
+// ─── Health Check ─────────────────────────────────────────────────
+app.get('/', (req, res) => {
+  res.json({ success: true, message: 'Real Estate API', version: 'v1', env: process.env.NODE_ENV || 'development' });
+});
+
+// ─── 404 ──────────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
+});
+
+// ─── Global Error Handler ─────────────────────────────────────────
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5001;
+app.listen(PORT, () => {
+  console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
+});
