@@ -1,6 +1,10 @@
 'use client';
 
-interface Feature { _id: string; name: string; category: string }
+interface Feature { 
+  _id: string; 
+  name: string; 
+  category?: string; // Make category optional
+}
 
 interface FeatureSelectorProps {
   label:    string;
