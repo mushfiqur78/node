@@ -11,7 +11,7 @@ const input = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:
 
 interface Banner {
   _id: string; title: string; subtitle: string; description: string;
-  image: { url: string; alt: string }; buttonText: string; buttonUrl: string;
+  image: { url: string; alt: string; title?: string }; buttonText: string; buttonUrl: string;
   type: string; order: number; isActive: boolean;
 }
 
