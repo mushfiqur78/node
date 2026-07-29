@@ -9,8 +9,16 @@ const sharp = require('sharp');
 const path  = require('path');
 const fs    = require('fs');
 
+// For serverless, we can't use local file storage
+// This should be configured to use cloud storage (S3, Cloudinary, etc.)
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'properties');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+// Only create directory if not in serverless environment
+if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
+  if (!fs.existsSync(UPLOAD_DIR)) {
+    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+  }
+}
 
 // ─── Core processor ───────────────────────────────────────────────
 const processImage = async (buffer, options = {}) => {
