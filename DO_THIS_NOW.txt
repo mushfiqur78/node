@@ -1,0 +1,141 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║            এখনই এটা করুন (URGENT - 5 Minutes)              ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+📍 আপনি এখানে আছেন: G:\brokerage-backend
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  OPTION 1: Automatic (সবচেয়ে সহজ)                          │
+└──────────────────────────────────────────────────────────────┘
+
+Double-click করুন:
+    fix-now.bat
+
+এটা automatically:
+  ✓ Git add করবে
+  ✓ Commit করবে
+  ✓ Push করবে
+  ✓ Next steps বলবে
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  OPTION 2: Manual (PowerShell)                               │
+└──────────────────────────────────────────────────────────────┘
+
+PowerShell open করুন এবং type করুন:
+
+    cd G:\brokerage-backend
+    git add .
+    git commit -m "Add debug endpoints"
+    git push
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  তারপর কি করবেন (After Push)                               │
+└──────────────────────────────────────────────────────────────┘
+
+1. ⏳ Wait করুন: 2-3 minutes
+
+2. 🌐 Browser এ যান:
+   https://vercel.com/dashboard
+
+3. ✅ Check deployment status:
+   Deployments → Latest → "Ready" দেখা যাচ্ছে?
+
+4. 🧪 Test করুন:
+   
+   Step A - Health Check:
+   https://your-app.vercel.app/health
+   
+   ✅ যদি success → Good! Next step এ যান
+   ❌ যদি 500 → Read: EMERGENCY_FIX.md
+
+   Step B - Environment Check:
+   https://your-app.vercel.app/test
+   
+   ✅ যদি "SET" দেখায় → MongoDB issue, check Atlas
+   ❌ যদি "NOT SET" দেখায় → Add env variables
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  Environment Variables Add করতে হবে?                        │
+└──────────────────────────────────────────────────────────────┘
+
+যদি /test endpoint এ "NOT SET" দেখায়:
+
+1. Go to: https://vercel.com/dashboard
+2. Your Project → Settings → Environment Variables
+3. Add these:
+
+   Name: MONGO_URI
+   Value: mongodb+srv://user:pass@cluster.mongodb.net/real-estate?retryWrites=true&w=majority
+   ✓ Production ✓ Preview ✓ Development
+
+   Name: JWT_SECRET
+   Value: your_secret_key_at_least_32_characters_long
+   ✓ Production ✓ Preview ✓ Development
+
+   Name: NODE_ENV
+   Value: production
+   ✓ Production ✓ Preview ✓ Development
+
+4. Redeploy: Deployments → Latest → Redeploy (Cache OFF)
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  সাহায্যের জন্য এই files পড়ুন                              │
+└──────────────────────────────────────────────────────────────┘
+
+📄 EMERGENCY_FIX.md        - সমস্যা diagnosis
+📄 STEP_BY_STEP_NOW.md     - বিস্তারিত steps (screenshots সহ)
+📄 FIX_500_ERROR.md         - Complete troubleshooting
+📄 CURRENT_STATUS.md        - বর্তমান status
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  Quick Diagnosis                                             │
+└──────────────────────────────────────────────────────────────┘
+
+/health works, /test shows "NOT SET"
+└─► Add environment variables in Vercel
+
+/health works, /test shows "SET", but / fails
+└─► Check MongoDB Atlas Network Access (0.0.0.0/0)
+
+/health fails
+└─► Check Root Directory in Vercel Settings
+
+Everything fails
+└─► Read EMERGENCY_FIX.md for fresh start
+
+
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  🚀 START NOW: Double-click fix-now.bat                     ║
+║                OR                                            ║
+║     Open PowerShell and run the manual commands             ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+📊 Expected Timeline:
+  ├─ Push code: 1 minute
+  ├─ Vercel deploy: 2-3 minutes
+  ├─ Test endpoints: 1 minute
+  ├─ Add env vars (if needed): 3 minutes
+  └─ Final test: 1 minute
+  
+  Total: 8-10 minutes to complete fix
+
+
+⚠️  MOST COMMON ISSUE: Environment variables not set properly
+    → Solution: Add them in Vercel Dashboard with ALL 3 environments checked
+
+
+✅ Success = /health AND /test AND / all work = No 500 errors
+
+
+Need help? Read: STEP_BY_STEP_NOW.md (has screenshots and detailed guide)
