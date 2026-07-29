@@ -3,25 +3,24 @@
  * This file exports the Express app for Vercel's serverless environment
  */
 
-// Load environment variables
+// Load environment variables first
 require('dotenv').config();
 
-// Mark as Vercel environment
+// Set Vercel environment flag
 process.env.VERCEL = 'true';
+process.env.NODE_ENV = process.env.NODE_ENV || 'production';
 
-// Import the Express app
-const app = require('../src/app');
+// Import Express app
+let app;
 
-// Vercel serverless function handler
-// This wraps the Express app to work with Vercel's serverless architecture
-const handler = (req, res) => {
-  // Set serverless-specific headers
-  res.setHeader('X-Powered-By', 'Vercel');
-  
-  // Forward the request to Express
-  return app(req, res);
-};
+try {
+  app = require('../src/app');
+} catch (error) {
+  console.error('Failed to load app:', error);
+  throw error;
+}
 
-// Export for Vercel
-module.exports = handler;
-module.exports.default = handler;
+// Export the Express app directly for Vercel
+// Vercel's @vercel/node runtime handles the serverless wrapper automatically
+module.exports = app;
+module.exports.default = app;
