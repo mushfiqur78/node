@@ -7,13 +7,14 @@ import { useEffect, useState } from 'react';
 import api from '@/lib/api';
 
 interface Option { _id: string; name: string; [key: string]: any }
+interface Feature extends Option { category: string }
 
 interface ConfigOptions {
   propertyTypes: Option[];
   locations:     Option[];
   purposes:      Option[];
   statuses:      Option[];
-  features:      Option[];
+  features:      Feature[];
   loading:       boolean;
 }
 
@@ -22,7 +23,7 @@ export function useConfigOptions(): ConfigOptions {
   const [locations,     setLocations]     = useState<Option[]>([]);
   const [purposes,      setPurposes]      = useState<Option[]>([]);
   const [statuses,      setStatuses]      = useState<Option[]>([]);
-  const [features,      setFeatures]      = useState<Option[]>([]);
+  const [features,      setFeatures]      = useState<Feature[]>([]);
   const [loading,       setLoading]       = useState(true);
 
   useEffect(() => {
