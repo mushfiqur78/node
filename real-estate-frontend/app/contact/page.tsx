@@ -7,7 +7,7 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import {
   Home, ChevronRight, MapPin, Phone, Mail,
-  Clock, Send, MessageCircle, Facebook, Linkedin
+  Clock, Send, MessageCircle
 } from 'lucide-react';
 
 const inp = 'w-full px-4 py-3 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#005e9e]/20 focus:border-[#005e9e] transition bg-white';

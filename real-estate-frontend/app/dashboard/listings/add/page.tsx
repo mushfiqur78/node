@@ -217,7 +217,7 @@ export default function AddPropertyPage() {
   const { data: features }  = useFeatures();
   const { data: labels }    = useLabels();
 
-  const set = (k: string, v: any) => setForm(f => ({ ...f, [k]: v }));
+  const set = (k: string, v: any) => setForm((f: typeof INIT) => ({ ...f, [k]: v }));
 
   // -- Draft helpers -------------------------------------------
   const saveDraft = () => {
