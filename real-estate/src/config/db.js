@@ -11,17 +11,19 @@ const connectDB = async () => {
   }
 
   try {
-    // Check if MONGO_URI exists
-    if (!process.env.MONGO_URI) {
-      throw new Error('MONGO_URI environment variable is not defined');
+    // Support both MONGO_URI and MONGODB_URI for deployment environments
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI;
+
+    if (!mongoUri) {
+      throw new Error('MONGO_URI or MONGODB_URI environment variable is not defined');
     }
 
     // Configure mongoose for serverless
     mongoose.set('strictQuery', false);
 
     // Connect to MongoDB with serverless-friendly options
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+    const conn = await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 10000, // Timeout after 10 seconds
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     });
 
