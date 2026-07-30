@@ -98,8 +98,29 @@ const authLimiter = rateLimit({
 });
 
 // ─── General Middleware ───────────────────────────────────────────
-const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*';
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+const getAllowedOrigins = () => {
+  const configuredOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map((origin) => origin.trim()).filter(Boolean)
+    : [];
+
+  return configuredOrigins.length > 0
+    ? configuredOrigins
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000', 'http://127.0.0.1:3001'];
+};
+
+app.use(cors({
+  origin: (origin, callback) => {
+    const allowedOrigins = getAllowedOrigins();
+    const isAllowed = !origin || allowedOrigins.includes(origin) || /(^|\.)vercel\.app$/i.test(origin);
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(null, false);
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
