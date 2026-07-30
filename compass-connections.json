@@ -16,7 +16,7 @@
       },
       "savedConnectionType": "recent",
       "connectionOptions": {
-        "connectionString": "mongodb://localhost:27017/",
+        "connectionString": "mongodb+srv://mushfiqur78_db_user:<db_password>@cluster0.swtw3vm.mongodb.net/",
         "oidc": {}
       }
     }
