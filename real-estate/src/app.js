@@ -184,6 +184,32 @@ app.get('/api/v1/health', (req, res) => {
   });
 });
 
+// Debug endpoint to check MongoDB connection
+app.get('/api/v1/debug/mongo', async (req, res) => {
+  try {
+    const mongoUri = process.env.MONGO_URI || process.env.MONGODB_URI || process.env.MONGO_URL;
+    
+    res.json({
+      success: true,
+      debug: {
+        hasMongoUri: !!mongoUri,
+        mongoUriLength: mongoUri ? mongoUri.length : 0,
+        mongoUriPrefix: mongoUri ? mongoUri.substring(0, 25) + '...' : 'NOT_SET',
+        isInitialized,
+        mongooseReadyState: require('mongoose').connection.readyState,
+        readyStateText: ['disconnected', 'connected', 'connecting', 'disconnecting'][require('mongoose').connection.readyState],
+        allEnvVars: Object.keys(process.env).filter(key => key.includes('MONGO')),
+      }
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // ─── 404 ──────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ success: false, message: `Route not found: ${req.method} ${req.originalUrl}` });
