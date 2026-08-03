@@ -20,6 +20,10 @@
       "dest": "/api/test.js"
     },
     {
+      "src": "/test-mongo",
+      "dest": "/api/test-mongo.js"
+    },
+    {
       "src": "/uploads/(.*)",
       "dest": "/uploads/$1"
     },
