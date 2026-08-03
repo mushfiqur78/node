@@ -111,15 +111,19 @@ const getAllowedOrigins = () => {
 app.use(cors({
   origin: (origin, callback) => {
     const allowedOrigins = getAllowedOrigins();
+    // Allow all Vercel deployments and configured origins
     const isAllowed = !origin || allowedOrigins.includes(origin) || /(^|\.)vercel\.app$/i.test(origin);
 
     if (isAllowed) {
       callback(null, true);
     } else {
+      console.log('CORS blocked origin:', origin);
       callback(null, false);
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -169,6 +173,15 @@ app.use('/api', (req, res, next) => {
 // ─── Health Check ─────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.json({ success: true, message: 'Real Estate API', version: 'v1', env: process.env.NODE_ENV || 'development' });
+});
+
+app.get('/api/v1/health', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'API is healthy', 
+    timestamp: new Date().toISOString(),
+    database: isInitialized ? 'connected' : 'initializing'
+  });
 });
 
 // ─── 404 ──────────────────────────────────────────────────────────
