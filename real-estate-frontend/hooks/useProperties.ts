@@ -21,7 +21,7 @@ export interface PropertyData {
   rentPerMonth?: number;
   pricePerSft?: number;
   pricePerSqft?: number;
-};
+  };
   areaSize: number;
   bedrooms?: number;
   bathrooms?: number;
