@@ -121,12 +121,16 @@ export default function PropertyListingSection() {
                   slug={property.slug}
                   title={property.title}
                   price={
-                    property.pricing.totalPrice 
-                      ? `BDT ${(property.pricing.totalPrice / 10000000).toFixed(2)} Crore`
-                      : property.pricing.rentPerMonth
-                      ? `BDT ${property.pricing.rentPerMonth.toLocaleString()}/month`
-                      : 'Price on request'
-                  }
+                      property.pricing.totalPrice
+                        ? `BDT ${property.pricing.totalPrice.toLocaleString()}`
+                        : property.pricing.rentPerMonth
+                        ? `BDT ${property.pricing.rentPerMonth.toLocaleString()}/month`
+                        : property.pricing.pricePerSft
+                        ? `BDT ${property.pricing.pricePerSft.toLocaleString()}/sqft`
+                        : property.pricing.pricePerSqft
+                        ? `BDT ${property.pricing.pricePerSqft.toLocaleString()}/sqft`
+                        : 'Price on request'
+                    }
                   location={locationName}
                   locationSlug={property.location?.slug}
                   locationPurposeId={purposeId}
