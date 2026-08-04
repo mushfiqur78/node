@@ -17,10 +17,11 @@ export interface PropertyData {
   slug: string;
   description?: string;
   pricing: {
-    totalPrice?: number;
-    rentPerMonth?: number;
-    pricePerSqft?: number;
-  };
+  totalPrice?: number;
+  rentPerMonth?: number;
+  pricePerSft?: number;
+  pricePerSqft?: number;
+};
   areaSize: number;
   bedrooms?: number;
   bathrooms?: number;
