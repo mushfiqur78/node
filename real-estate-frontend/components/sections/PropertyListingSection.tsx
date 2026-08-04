@@ -24,10 +24,13 @@ export default function PropertyListingSection() {
   const { data: purposes } = usePurposes();
   
   // Find Buy and Rent purpose IDs
-  const buyPurpose = useMemo(() => 
-    purposes?.find(p => p.name.toLowerCase() === 'sell')?._id || '', 
-    [purposes]
-  );
+  const buyPurpose = useMemo(
+  () =>
+    purposes?.find((p) =>
+      ['buy', 'sell'].includes(p.name.toLowerCase())
+    )?._id || '',
+  [purposes]
+);
   const rentPurpose = useMemo(() => 
     purposes?.find(p => p.name.toLowerCase() === 'rent')?._id || '', 
     [purposes]
