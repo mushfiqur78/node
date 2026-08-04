@@ -1,70 +1,141 @@
 /**
  * Image Service
- * Processes images with Sharp (webp, resize, optimize)
- * Saves to Media library collection
- * Supports reuse across properties
+ * Uploads optimized images to Vercel Blob
  */
 
 const sharp = require('sharp');
-const path  = require('path');
-const fs    = require('fs');
+const { put, del } = require('@vercel/blob');
 
-// For serverless, we can't use local file storage
-// This should be configured to use cloud storage (S3, Cloudinary, etc.)
-const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'properties');
-
-// Only create directory if not in serverless environment
-if (!process.env.VERCEL && !process.env.AWS_LAMBDA_FUNCTION_NAME) {
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
-  }
-}
-
-// ─── Core processor ───────────────────────────────────────────────
+// Process image and upload to Vercel Blob
 const processImage = async (buffer, options = {}) => {
   const { width = 800, quality = 75 } = options;
-  const filename   = `${Date.now()}-${Math.random().toString(36).slice(2)}.webp`;
-  const outputPath = path.join(UPLOAD_DIR, filename);
-  await sharp(buffer).resize({ width, withoutEnlargement: true }).webp({ quality }).toFile(outputPath);
-  return { url: `/uploads/properties/${filename}`, filename, size: fs.statSync(outputPath).size };
+
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    throw new Error('BLOB_READ_WRITE_TOKEN is missing');
+  }
+
+  const filename =
+    `properties/${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.webp`;
+
+  const outputBuffer = await sharp(buffer)
+    .rotate()
+    .resize({
+      width,
+      withoutEnlargement: true,
+    })
+    .webp({ quality })
+    .toBuffer();
+
+  const blob = await put(filename, outputBuffer, {
+    access: 'public',
+    addRandomSuffix: true,
+    contentType: 'image/webp',
+    token: process.env.BLOB_READ_WRITE_TOKEN,
+  });
+
+  return {
+    url: blob.url,
+    filename: blob.pathname || filename,
+    size: outputBuffer.length,
+  };
 };
 
-// ─── Process + save to Media library ──────────────────────────────
-const processAndSave = async (file, meta = {}, uploadedBy = null) => {
+// Process image and save information to Media collection
+const processAndSave = async (
+  file,
+  meta = {},
+  uploadedBy = null
+) => {
   const Media = require('../models/Media');
-  const { url, filename, size } = await processImage(file.buffer);
-  return await Media.create({
-    url, filename, size,
-    alt:        meta.alt   || '',
-    title:      meta.title || '',
+
+  const { url, filename, size } =
+    await processImage(file.buffer);
+
+  return Media.create({
+    url,
+    filename,
+    size,
+    alt: meta.alt || '',
+    title: meta.title || '',
     uploadedBy,
   });
 };
 
-// ─── Featured image: process + save → return { url, alt, title } ──
-const processFeaturedImage = async (file, meta = {}, uploadedBy = null) => {
-  const media = await processAndSave(file, meta, uploadedBy);
-  return { url: media.url, alt: media.alt, title: media.title };
+// Featured image
+const processFeaturedImage = async (
+  file,
+  meta = {},
+  uploadedBy = null
+) => {
+  const media = await processAndSave(
+    file,
+    meta,
+    uploadedBy
+  );
+
+  return {
+    url: media.url,
+    alt: media.alt,
+    title: media.title,
+  };
 };
 
-// ─── Gallery images: process + save each → return array ───────────
-const processGalleryImages = async (files, metas = [], uploadedBy = null) => {
-  if (files.length > 10) throw new Error('Maximum 10 gallery images allowed');
+// Gallery images
+const processGalleryImages = async (
+  files,
+  metas = [],
+  uploadedBy = null
+) => {
+  if (files.length > 10) {
+    throw new Error(
+      'Maximum 10 gallery images allowed'
+    );
+  }
+
   return Promise.all(
-    files.map(async (file, i) => {
-      const media = await processAndSave(file, metas[i] || {}, uploadedBy);
-      return { url: media.url, alt: media.alt, title: media.title };
+    files.map(async (file, index) => {
+      const media = await processAndSave(
+        file,
+        metas[index] || {},
+        uploadedBy
+      );
+
+      return {
+        url: media.url,
+        alt: media.alt,
+        title: media.title,
+      };
     })
   );
 };
 
-// ─── Delete from disk (not from Media collection) ─────────────────
-const deleteImage = (image) => {
-  if (!image) return;
-  const urlPath = typeof image === 'string' ? image : image.url;
-  if (!urlPath) return;
-  const filePath = path.join(process.cwd(), urlPath);
-  if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+// Delete image from Vercel Blob
+const deleteImage = async (image) => {
+  const url =
+    typeof image === 'string' ? image : image?.url;
+
+  if (!url || !url.includes('blob.vercel-storage.com')) {
+    return;
+  }
+
+  try {
+    await del(url, {
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+  } catch (error) {
+    console.error(
+      'Blob image delete failed:',
+      error.message
+    );
+  }
 };
 
-module.exports = { processImage, processAndSave, processFeaturedImage, processGalleryImages, deleteImage };
+module.exports = {
+  processImage,
+  processAndSave,
+  processFeaturedImage,
+  processGalleryImages,
+  deleteImage,
+};
